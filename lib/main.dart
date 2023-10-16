@@ -645,8 +645,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           side: BorderSide(color: Theme.of(context).colorScheme.outline, width: 2), // Border color and width
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Add tile to Quick Settings',
+                          style: TextStyle(color: Theme.of(context).colorScheme.primary)
                       ),
                     ),
                   ],
