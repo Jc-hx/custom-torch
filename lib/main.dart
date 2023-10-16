@@ -304,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //   });
   // }
 
-  final Uri _url = Uri.parse('https://github.com/Jc-hx');
+  final Uri _url = Uri.parse('https://github.com/Jc-hx/Custom-Torch');
 
   Future<void> _launchUrl() async {
     if (!await launchUrl(_url)) {
