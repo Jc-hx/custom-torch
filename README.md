@@ -1,6 +1,8 @@
-# custom_torch
+# Custom Torch
 
-A cusrom torch tile for different brightness on Android.
+![image](presentation.png)
+
+A custom torch tile for different brightness on Android.
 
 ## Getting Started
 
