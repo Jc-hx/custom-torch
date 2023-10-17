@@ -1,27 +1,28 @@
 package com.chx.custom_torch
 
 import android.app.AlertDialog
+import android.app.StatusBarManager
 import android.content.ComponentName
-import android.graphics.drawable.Icon
-import io.flutter.embedding.android.FlutterActivity
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraManager
-import android.os.Bundle
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.MethodChannel
-import 	android.app.StatusBarManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.graphics.drawable.Icon
+import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
+import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
 import android.view.WindowManager
 import androidx.core.content.ContextCompat
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.Executor
 import java.util.function.Consumer
+
 
 class MainActivity: FlutterActivity() {
     private lateinit var cameraManager: CameraManager

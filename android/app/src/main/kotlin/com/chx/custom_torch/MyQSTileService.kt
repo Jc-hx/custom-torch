@@ -1,18 +1,20 @@
 package com.chx.custom_torch
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.graphics.drawable.Icon
 import android.hardware.camera2.CameraAccessException
-import android.service.quicksettings.Tile
-import android.service.quicksettings.TileService
 import android.hardware.camera2.CameraManager
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.content.SharedPreferences
-import android.graphics.drawable.Icon
+import android.service.quicksettings.Tile
+import android.service.quicksettings.TileService
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 
 class MyQSTileService : TileService() {
 
@@ -26,6 +28,7 @@ class MyQSTileService : TileService() {
     override fun onCreate() {
         super.onCreate()
         cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
+        registerFlashlightState(this)
     }
 
 
@@ -70,7 +73,6 @@ class MyQSTileService : TileService() {
 
         prefs.apply()
 
-        //TileChannelManager.invokeTileClick()
         TileChannelManager.invokeOnToggle()
     }
     override fun onTileAdded() {
@@ -144,5 +146,35 @@ class MyQSTileService : TileService() {
         qsTile.icon = Icon.createWithResource(this, R.drawable.ic_outline)
         qsTile.updateTile()
     }
+
+    private fun registerFlashlightState(context: Context) {
+        cameraManager.registerTorchCallback(torchCallback, null)
+    }
+
+    fun unregisterFlashlightState(context: Context) {
+        cameraManager.unregisterTorchCallback(torchCallback)
+    }
+
+    private val torchCallback: CameraManager.TorchCallback =
+        object : CameraManager.TorchCallback() {
+            override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
+                val sharedPreferences: SharedPreferences = getSharedPreferences("AndroidSharedPrefs", Context.MODE_PRIVATE)
+                val prefs = sharedPreferences.edit()
+                super.onTorchModeChanged(cameraId, enabled)
+                //TileChannelManager.invokeOnToggle()
+                if (enabled) {
+                    TileChannelManager.isOn = 1
+                    Log.d("Torch status", "Torch On")
+                    prefs.putInt("torchStatus", 1)
+                    activeTile()
+                } else {
+                    TileChannelManager.isOn = 0
+                    Log.d("Torch status", "Torch Off")
+                    prefs.putInt("torchStatus", 0)
+                    inactiveTile()
+                }
+                prefs.apply()
+            }
+        }
 
 }

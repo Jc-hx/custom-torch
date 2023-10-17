@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
 
     <application
         android:name="${applicationName}"
@@ -33,7 +35,8 @@
             android:hardwareAccelerated="true"
             android:launchMode="singleTop"
             android:theme="@style/LaunchTheme"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:showOnLockScreen="true">
 
             <!--
                  Specifies an Android theme to apply to this Activity as soon as
@@ -57,9 +60,10 @@
             android:launchMode="singleInstance"
             android:taskAffinity=""
             android:theme="@style/TransparentDialogTheme"
-            android:exported="true">
+            android:exported="true"
+            android:showOnLockScreen="true">
             <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES"/>
             </intent-filter>
         </activity>
         <!--

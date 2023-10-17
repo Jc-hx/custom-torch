@@ -1,6 +1,7 @@
 package com.chx.custom_torch
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -10,27 +11,30 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.hardware.camera2.CameraAccessException
-import android.os.Bundle
-import android.provider.Settings
-import android.view.Gravity
-import android.widget.TextView
+import android.hardware.camera2.CameraManager
 import android.net.Uri
+import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.provider.Settings
 import android.util.Log
+import android.view.Gravity
+import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.SeekBar
-import android.hardware.camera2.CameraManager
+import android.widget.TextView
 
 
 class PopupActivity : Activity() {
     private lateinit var cameraManager: CameraManager
+    private lateinit var keyguardManager: KeyguardManager
     private var popupAutoOn = true
     private var popupAutoOff = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
         super.onCreate(savedInstanceState)
+        cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
+
         if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
             startActivityForResult(intent, 101)
@@ -57,6 +61,9 @@ class PopupActivity : Activity() {
             messageTextView.setTextColor(Color.WHITE)
             messageTextView.gravity = Gravity.CENTER
             messageTextView.setPadding(16, 16, 16, 16)
+
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
 
             // Vertical SeekBar
             setContentView(R.layout.vertical_seekbar)

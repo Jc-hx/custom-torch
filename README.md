@@ -2,17 +2,19 @@
 
 ![image](presentation.png)
 
-A custom torch tile for different brightness on Android.
+Custom tile with brightness control and a popup UI.
 
-## Getting Started
+## Description
 
-This project is a starting point for a Flutter application.
+This app creates a tile in the quick settings so you can customize the brightness and access a slider over your apps.
+Also with a smooth swith on/off transition.
 
-A few resources to get you started if this is your first Flutter project:
+## Supported devices
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+This app has been tested on Pixel 7 only. This app is compatible with Android 13+ devices using Camera2 torchStrenght API.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Download
+
+Soon.. You can compile the app with Flutter for now.
+
+
