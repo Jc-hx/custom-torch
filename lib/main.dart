@@ -15,16 +15,17 @@ Color mainDark = Colors.black;
 Color mainLight = Colors.white;
 Color mainDark2 = Colors.white;
 Color mainLight2 = Colors.black;
+
 int torchStatus = 0;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await requestCameraPermission();
-  getColor1();
-  getColor2();
-  getColor3();
-  getColor4();
-  getStatus();
+  await getColor1();
+  await getColor2();
+  await getColor3();
+  await getColor4();
+
   runApp(const MyApp());
 }
 
@@ -72,43 +73,23 @@ Future<void> getStatus() async {
 }
 
 Future<int> _getColor1() async {
-  try {
     final int result = await platform.invokeMethod('getColor1');
     return result;
-  } on PlatformException catch (e) {
-    print("Failed to get color: '${e.message}'.");
-    return 0; // Return a default color or handle the error accordingly
-  }
 }
 
 Future<int> _getColor2() async {
-  try {
     final int result = await platform.invokeMethod('getColor2');
     return result;
-  } on PlatformException catch (e) {
-    print("Failed to get color: '${e.message}'.");
-    return 0; // Return a default color or handle the error accordingly
-  }
 }
 
 Future<int> _getColor3() async {
-  try {
     final int result = await platform.invokeMethod('getColor3');
     return result;
-  } on PlatformException catch (e) {
-    print("Failed to get color: '${e.message}'.");
-    return 0; // Return a default color or handle the error accordingly
-  }
 }
 
 Future<int> _getColor4() async {
-  try {
     final int result = await platform.invokeMethod('getColor4');
     return result;
-  } on PlatformException catch (e) {
-    print("Failed to get color: '${e.message}'.");
-    return 0; // Return a default color or handle the error accordingly
-  }
 }
 
 Future<int> _getStatus() async {
@@ -132,14 +113,22 @@ Future<void> _checkPrefs() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
+
+    getColor1();
+    getColor2();
+    getColor3();
+    getColor4();
+    getStatus();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Custom Torch',
       theme: ThemeData(
         useMaterial3: true,
+        primaryColor: mainLight2,
         colorScheme: ColorScheme.fromSeed(
           primary: mainLight2,
           background: Colors.black87,
@@ -153,6 +142,7 @@ class MyApp extends StatelessWidget {
 
       darkTheme: ThemeData(
         useMaterial3: true,
+        primaryColor: mainLight,
         colorScheme: ColorScheme.fromSeed(
           primary: mainLight,
           background: Colors.black87,
@@ -600,6 +590,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(width: 16),
                     DropdownButton<int>(
                       value: stepsNumber,
+                      dropdownColor: mainDark,
                       onChanged: (int? newValue) {
                         setState(() {
                           brightnessLevel = brightnessLevel * newValue! ~/ stepsNumber;
@@ -619,10 +610,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       items: stepsList.map<DropdownMenuItem<int>>((int value) {
                         return DropdownMenuItem<int>(
                           value: value,
-                          child: Text(value.toString()), // Display item in the dropdown
+                          child: Text(value.toString(),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground,
+                            backgroundColor: mainDark,
+                          )),
                         );
                       }).toList(),
-                      // Replace `yourList` with your actual list of integers
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.background,
+                      )
                     ),
                   ],
                 ),
