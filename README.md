@@ -19,7 +19,7 @@ Also with a smooth swith on/off transition.
 
 Soon.. You can compile the app with Flutter for now.
 
-##🛠️ Building app from source
+## 🛠️ Building app from source
 
 1. Setup flutter environment for your [platform](https://docs.flutter.dev/get-started/install)
 2. Clone the repository locally
