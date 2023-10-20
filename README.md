@@ -7,7 +7,7 @@ Custom tile with brightness control and a popup UI.
 ## 🖊️ Description
 
 This app creates a tile in the quick settings so you can customize the brightness and access a slider over your apps.
-Also with a smooth swith on/off transition.
+Also with a smooth switch on/off transition.
 
 ## 📝 Prerequisites
 

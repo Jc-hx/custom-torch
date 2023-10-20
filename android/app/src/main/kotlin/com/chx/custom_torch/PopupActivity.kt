@@ -96,7 +96,7 @@ class PopupActivity : Activity() {
             dotCanvas.drawCircle(20f, 20f, 20f, dotPaint)
             val thumbDrawable = BitmapDrawable(resources, dotBitmap)
             //val tickMarkDrawable = resources.getDrawable(R.drawable.custom_ticks_seekbar, theme)
-            verticalSeekBar.tickMark = thumbDrawable
+            //verticalSeekBar.tickMark = thumbDrawable
             verticalSeekBar.splitTrack = false
             verticalSeekBar.thumb.mutate().alpha = 0
             verticalSeekBar.max = maxStepsNumber

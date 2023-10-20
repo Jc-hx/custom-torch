@@ -10,8 +10,8 @@
         android:maxHeight="0dp"
         android:minHeight="0dp"
         android:progress="0"
-        android:tickMark="@drawable/custom_ticks_seekbar"
         android:progressDrawable="@drawable/custom_progress_seekbar" />
+        <!--android:tickMark="@drawable/custom_ticks_seekbar"-->
         <!-- android:thumb="@drawable/custom_thumb_seekbar" -->
 
 </LinearLayout>

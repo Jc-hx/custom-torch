@@ -60,7 +60,8 @@
             android:taskAffinity=""
             android:theme="@style/TransparentDialogTheme"
             android:exported="true"
-            android:showOnLockScreen="true">
+            android:showOnLockScreen="true"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES"/>
             </intent-filter>
