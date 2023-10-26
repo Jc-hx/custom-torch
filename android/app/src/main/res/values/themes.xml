@@ -8,5 +8,6 @@
         <item name="colorSecondary">@color/secondary_600</item>
     </style>
 
+
     <style name="Theme.Android" parent="Base.Theme.Android" />
 </resources>

@@ -7,4 +7,5 @@
         <item name="colorPrimaryVariant">@color/system_neutral1_900</item>
         <item name="colorSecondary">@color/secondary_600</item>
     </style>
+
 </resources>

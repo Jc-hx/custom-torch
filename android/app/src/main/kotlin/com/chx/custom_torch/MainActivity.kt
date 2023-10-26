@@ -20,6 +20,12 @@ import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 import java.util.function.Consumer
 
@@ -27,8 +33,14 @@ import java.util.function.Consumer
 class MainActivity: FlutterActivity() {
     private lateinit var cameraManager: CameraManager
     private var maxFlashlightBrightnessLevel: Int? = 25
+    private var brightnessLevel = 1
     private var vibrationsMenu = true
     private var status: Int? = 0
+    private var tileEffect = true
+    private var stepsNumber = 5
+    private var isSwitching = false
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private var job: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,16 +55,34 @@ class MainActivity: FlutterActivity() {
         TileChannelManager.init(flutterEngine.dartExecutor.binaryMessenger)
         val sharedPreferences: SharedPreferences = getSharedPreferences("AndroidSharedPrefs", Context.MODE_PRIVATE)
         vibrationsMenu = sharedPreferences.getBoolean("vibrationsMenu", true)
+        tileEffect = sharedPreferences.getBoolean("tileEffect", true)
+        stepsNumber = sharedPreferences.getInt("stepsNumber", 5)
+        maxFlashlightBrightnessLevel = sharedPreferences.getInt("maxFlashlightBrightnessLevel", 45)
+        brightnessLevel = sharedPreferences.getInt("brightnessLevel", 1)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "torch_control_channel")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "turnOnTorchWithStrengthLevel" -> {
                         val torchStrength = call.arguments as Int
-                        turnOnTorchWithStrengthLevel(torchStrength)
+                        brightnessLevel = sharedPreferences.getInt("brightnessLevel", 1)
+                        tileEffect = sharedPreferences.getBoolean("tileEffect", true)
+                        turnOnTorchWithStrengthLevel(brightnessLevel)
+                        result.success(null)
+                    }
+                    "turnOnTorchWithStrengthLevel2" -> {
+                        val torchStrength = call.arguments as Int
+                        brightnessLevel = sharedPreferences.getInt("brightnessLevel", 1)
+                        tileEffect = sharedPreferences.getBoolean("tileEffect", true)
+                        job = coroutineScope.launch {
+                            turnOnTorchWithStrengthLevel2(brightnessLevel)
+                        }
                         result.success(null)
                     }
                     "turnOffTorch" -> {
-                        turnOffTorch()
+                        tileEffect = sharedPreferences.getBoolean("tileEffect", true)
+                        job = coroutineScope.launch {
+                            turnOffTorch()
+                        }
                         result.success(null)
                     }
                     "saveBrightness" -> {
@@ -259,7 +289,7 @@ class MainActivity: FlutterActivity() {
         if (!TileChannelManager.isAdded) {
             val tileServiceComponentName = ComponentName(context, MyQSTileService::class.java)
             val tileLabel = "Custom Torch"
-            val icon = Icon.createWithResource(context, R.mipmap.ic_launcher)
+            val icon = Icon.createWithResource(context, R.drawable.ic_outline)
             val statusBarManager: StatusBarManager = getSystemService(StatusBarManager::class.java)
             val resultSuccessExecutor = Executor {
                 Log.d("MyQSTileService", "requestAddTileService result success")
@@ -298,13 +328,32 @@ class MainActivity: FlutterActivity() {
         status = sharedPreferences.getInt("torchStatus", 0)
     }
 
-    private fun turnOffTorch() {
+    private suspend fun turnOffTorch() {
         try {
             val cameraId = cameraManager.cameraIdList[0] // Use the first available camera
-            cameraManager.setTorchMode(cameraId, false)
-            val vibrator = getSystemService(Vibrator::class.java)
-            if (vibrationsMenu) {
-                vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+            var torchStrength2 = brightnessLevel * maxFlashlightBrightnessLevel!! / stepsNumber
+            if (torchStrength2 == 0 || torchStrength2 <= (maxFlashlightBrightnessLevel!! / stepsNumber)) {
+                torchStrength2 = 1
+            }
+            var delayTime = 500L / torchStrength2
+            if (tileEffect && torchStrength2 != 1 && !isSwitching) {
+                isSwitching = true
+                for (i in torchStrength2 downTo 1) {
+                    delay(delayTime)
+                    var counter = 0
+                    while (isSwitching && counter < 1 && i >= 1) {
+                        cameraManager.turnOnTorchWithStrengthLevel(cameraId, i)
+                        counter++
+                    }
+                    if (i == 1 && isSwitching) {
+                        cameraManager.setTorchMode(cameraId, false)
+                    }
+                }
+                isSwitching = false
+            } else {
+                isSwitching = false
+                //job?.cancel()
+                cameraManager.setTorchMode(cameraId, false)
             }
         } catch (e: CameraAccessException) {
             e.printStackTrace()
@@ -313,12 +362,42 @@ class MainActivity: FlutterActivity() {
 
     private fun turnOnTorchWithStrengthLevel(torchStrength: Int) {
         try {
-            val cameraId = cameraManager.cameraIdList[0]
-            cameraManager.turnOnTorchWithStrengthLevel(cameraId, torchStrength)
-            val vibrator = getSystemService(Vibrator::class.java)
-            if (vibrationsMenu) {
-                vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+            val cameraId = cameraManager.cameraIdList[0] // Use the first available camera
+            var torchStrength2 = torchStrength * maxFlashlightBrightnessLevel!! / stepsNumber
+            if (torchStrength2 == 0 || torchStrength2 <= (maxFlashlightBrightnessLevel!! / stepsNumber)) {
+                torchStrength2 = 1
             }
+            cameraManager.turnOnTorchWithStrengthLevel(cameraId, torchStrength2)
+
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
+        }
+    }
+    private suspend fun turnOnTorchWithStrengthLevel2(torchStrength: Int) {
+        try {
+            val cameraId = cameraManager.cameraIdList[0] // Use the first available camera
+            var torchStrength2 = torchStrength * maxFlashlightBrightnessLevel!! / stepsNumber
+            if (torchStrength2 == 0 || torchStrength2 <= (maxFlashlightBrightnessLevel!! / stepsNumber)) {
+                torchStrength2 = 1
+            }
+            var delayTime = 500L / torchStrength2
+            if (tileEffect && torchStrength2 != 1 && !isSwitching) {
+                isSwitching = true
+                for (i in 1..torchStrength2) {
+                    delay(delayTime)
+                    var counter = 0
+                    while (isSwitching && counter < 1 && i < torchStrength2) {
+                        cameraManager.turnOnTorchWithStrengthLevel(cameraId, i)
+                        counter++
+                    }
+                }
+                isSwitching = false
+            } else {
+                isSwitching = false
+                //job?.cancel()
+                cameraManager.turnOnTorchWithStrengthLevel(cameraId, torchStrength2)
+            }
+
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }

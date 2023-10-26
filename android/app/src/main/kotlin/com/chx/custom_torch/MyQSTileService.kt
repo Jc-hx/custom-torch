@@ -12,6 +12,8 @@ import android.service.quicksettings.TileService
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -24,6 +26,9 @@ class MyQSTileService : TileService() {
     private var stepsNumber = 5
     private var vibrationsTile = true
     private var tileEffect = true
+    private var isSwitching = false
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private var job: Job? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -55,13 +60,13 @@ class MyQSTileService : TileService() {
         val prefs = sharedPreferences.edit()
         if (qsTile.state == Tile.STATE_ACTIVE) {
             inactiveTile()
-            CoroutineScope(Dispatchers.Default).launch {
+            job = coroutineScope.launch {
                 turnOffTorch()
             }
             prefs.putInt("torchStatus", 0)
         } else {
             activeTile()
-            CoroutineScope(Dispatchers.Default).launch {
+            job = coroutineScope.launch {
                 turnOnTorchWithStrengthLevel(brightnessLevel)
             }
 
@@ -94,13 +99,23 @@ class MyQSTileService : TileService() {
                 torchStrength2 = 1
             }
             var delayTime = 500L / torchStrength2
-            if (tileEffect && torchStrength2 != 1) {
+            if (tileEffect && torchStrength2 != 1 && !isSwitching) {
+                isSwitching = true
                 for (i in torchStrength2 downTo 1) {
                     delay(delayTime)
-                    cameraManager.turnOnTorchWithStrengthLevel(cameraId, i)
+                    var counter = 0
+                    while (isSwitching && counter < 1 && i >= 1) {
+                        cameraManager.turnOnTorchWithStrengthLevel(cameraId, i)
+                        counter++
+                    }
+                    if (i == 1 && isSwitching) {
+                        cameraManager.setTorchMode(cameraId, false)
+                    }
                 }
-                cameraManager.setTorchMode(cameraId, false)
+                isSwitching = false
             } else {
+                isSwitching = false
+                job?.cancel()
                 cameraManager.setTorchMode(cameraId, false)
             }
         } catch (e: CameraAccessException) {
@@ -117,12 +132,20 @@ class MyQSTileService : TileService() {
                 torchStrength2 = 1
             }
             var delayTime = 500L / torchStrength2
-            if (tileEffect && torchStrength2 != 1) {
+            if (tileEffect && torchStrength2 != 1 && !isSwitching) {
+                isSwitching = true
                 for (i in 1..torchStrength2) {
                     delay(delayTime)
-                    cameraManager.turnOnTorchWithStrengthLevel(cameraId, i)
+                    var counter = 0
+                    while (isSwitching && counter < 1 && i < torchStrength2) {
+                        cameraManager.turnOnTorchWithStrengthLevel(cameraId, i)
+                        counter++
+                    }
                 }
+                isSwitching = false
             } else {
+                isSwitching = false
+                job?.cancel()
                 cameraManager.turnOnTorchWithStrengthLevel(cameraId, torchStrength2)
             }
 

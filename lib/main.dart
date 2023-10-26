@@ -253,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isTorchOn = !isTorchOn;
       if (isTorchOn) {
-        _turnOnTorch(brightnessLevel);
+        _turnOnTorch2(brightnessLevel);
         _toggleOn();
       } else {
         _turnOffTorch();
@@ -317,6 +317,18 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     try {
       await platform.invokeMethod('turnOnTorchWithStrengthLevel', brightness);
+    } on PlatformException catch (e) {
+      print("Failed to turn on torch: ${e.message}");
+    }
+  }
+
+  Future<void> _turnOnTorch2(int brightness) async {
+    brightness = brightness * maxBrightness ~/ stepsNumber;
+    if (brightness == 0 || brightness <= maxBrightness ~/ stepsNumber) {
+      brightness = 1;
+    }
+    try {
+      await platform.invokeMethod('turnOnTorchWithStrengthLevel2', brightness);
     } on PlatformException catch (e) {
       print("Failed to turn on torch: ${e.message}");
     }
@@ -429,7 +441,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  List<int> stepsList = [3, 5, 10];
+  List<int> stepsList = [3, 4, 5, 6, 7, 8, 9, 10];
 
     @override
   Widget build(BuildContext context) {
@@ -653,62 +665,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
           SettingsSection(
-            title: const Text('Vibrations',
-                style: TextStyle(fontWeight: FontWeight.bold)
-            ),
-            tiles: <SettingsTile>[
-              SettingsTile.switchTile(
-                onToggle: (value) {
-                  setState(() {
-                    vibrationsMenu = value;
-                    _savePrefsU('vibrationsMenu', value);
-                    _savePrefsAndroidU('vibrationsMenu', value);
-                    _checkPrefs();
-                    if (vibrationsMenu) {
-                      HapticFeedback.selectionClick();
-                    }
-                  });
-                },
-                initialValue: vibrationsMenu,
-                leading: const Icon(Icons.menu_rounded),
-                title: const Text('Menu'),
-                description: const Text('Switch on/off this page vibrations feedback.'),
-              ),
-              SettingsTile.switchTile(
-                onToggle: (value) {
-                  setState(() {
-                    vibrationsTile = value;
-                    _savePrefsU('vibrationsTile', value);
-                    _savePrefsAndroidU('vibrationsTile', value);
-                    if (vibrationsMenu) {
-                      HapticFeedback.selectionClick();
-                    }
-                  });
-                },
-                initialValue: vibrationsTile,
-                leading: const Icon(Icons.flash_on_rounded),
-                title: const Text('Tile'),
-                description: const Text('Switch on/off quick settings tile vibrations feedback.'),
-              ),
-              SettingsTile.switchTile(
-                onToggle: (value) {
-                  setState(() {
-                    vibrationsPopup = value;
-                    _savePrefsU('vibrationsPopup', value);
-                    _savePrefsAndroidU('vibrationsPopup', value);
-                    if (vibrationsMenu) {
-                      HapticFeedback.selectionClick();
-                    }
-                  });
-                },
-                initialValue: vibrationsPopup,
-                leading: const Icon(Icons.add_to_home_screen_rounded),
-                title: const Text('Popup UI'),
-                description: const Text('Switch on/off popup vibrations feedback.'),
-              ),
-            ],
-          ),
-          SettingsSection(
             title: const Text('Miscellaneous',
               style: TextStyle(fontWeight: FontWeight.bold)
             ),
@@ -766,11 +722,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
+                      if (Theme.of(context).brightness == Brightness.dark) {
+                        //do nothing
+                      } else {
+                        mainDark = mainDark2;
+                        mainLight = mainLight2;
+                      }
                       return AlertDialog(
                         backgroundColor: mainDark,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                          //side: BorderSide(color: Colors.red),
                         ),
                         content: SizedBox(
                           height: 300.0,
@@ -779,14 +740,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Text('This app creates a tile in the quick settings so you can customize the brightness and access a slider over your apps.',
+                              Text(
+                                'This app creates a tile in the quick settings so you can customize the brightness and access a slider over your apps.',
                                 style: GoogleFonts.lato(
                                   color: mainLight,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(height: 20),
-                              Text('Has been made with love in October 2023.',
+                              Text(
+                                'Has been made with love in October 2023.',
                                 style: GoogleFonts.lato(
                                   color: mainLight,
                                   fontWeight: FontWeight.w100,
@@ -796,13 +759,15 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                         actions: [
-                          TextButton(onPressed: () {
-                            Navigator.pop(context);
-                            if (vibrationsMenu) {
-                              HapticFeedback.selectionClick();
-                            }
-                          },
-                            child: Text('OK',
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              if (vibrationsMenu) {
+                                HapticFeedback.selectionClick();
+                              }
+                            },
+                            child: Text(
+                              'OK',
                               style: GoogleFonts.lato(
                                 color: mainLight,
                               ),
@@ -815,7 +780,62 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 leading: const Icon(Icons.info_outline),
                 title: const Text('About'),
-                //inactiveTrackColor: Colors.green,
+              ),
+            ],
+          ),
+          SettingsSection(
+            title: const Text('Vibrations Feedback',
+                style: TextStyle(fontWeight: FontWeight.bold)
+            ),
+            tiles: <SettingsTile>[
+              SettingsTile.switchTile(
+                onToggle: (value) {
+                  setState(() {
+                    vibrationsMenu = value;
+                    _savePrefsU('vibrationsMenu', value);
+                    _savePrefsAndroidU('vibrationsMenu', value);
+                    _checkPrefs();
+                    if (vibrationsMenu) {
+                      HapticFeedback.selectionClick();
+                    }
+                  });
+                },
+                initialValue: vibrationsMenu,
+                leading: const Icon(Icons.menu_rounded),
+                title: const Text('Menu'),
+                description: const Text('Switch on/off this page vibrations feedback.'),
+              ),
+              SettingsTile.switchTile(
+                onToggle: (value) {
+                  setState(() {
+                    vibrationsTile = value;
+                    _savePrefsU('vibrationsTile', value);
+                    _savePrefsAndroidU('vibrationsTile', value);
+                    if (vibrationsMenu) {
+                      HapticFeedback.selectionClick();
+                    }
+                  });
+                },
+                initialValue: vibrationsTile,
+                leading: const Icon(Icons.flash_on_rounded),
+                title: const Text('Tile'),
+                description: const Text('Switch on/off quick settings tile vibrations feedback.'),
+              ),
+              SettingsTile.switchTile(
+                onToggle: (value) {
+                  setState(() {
+                    vibrationsPopup = value;
+                    _savePrefsU('vibrationsPopup', value);
+                    _savePrefsAndroidU('vibrationsPopup', value);
+                    if (vibrationsMenu) {
+                      HapticFeedback.selectionClick();
+                    }
+                  });
+                },
+                initialValue: vibrationsPopup,
+                leading: const Icon(Icons.add_to_home_screen_rounded),
+                title: const Text('Popup UI'),
+                description: const Text('Switch on/off popup vibrations feedback.'),
               ),
             ],
           ),
