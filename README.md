@@ -26,7 +26,6 @@ Also with a smooth switch on/off transition.
 
 ## 🔽 Download
 
-[Github releases](https://github.com/Jc-hx/Custom-Torch/releases/)
 [<img height=80 alt="Get it on Google Play"
 src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
 />](https://play.google.com/store/apps/details?id=com.chx.custom_torch)
