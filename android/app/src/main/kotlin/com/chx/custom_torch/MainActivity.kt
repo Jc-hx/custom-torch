@@ -247,6 +247,7 @@ class MainActivity: FlutterActivity() {
     private fun checkFlash() {
         try {
             val cameraIdList = cameraManager.cameraIdList
+            if (cameraIdList.isEmpty()) return
             for (cameraId in cameraIdList) {
                 val characteristics = cameraManager.getCameraCharacteristics(cameraId)
                 val flashlightAvailable = characteristics.get(

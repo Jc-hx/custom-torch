@@ -13,7 +13,7 @@ Also with a smooth switch on/off transition.
 
 1. Android 13 or higher.
 2. Camera2 torchStrenght API.
-3. Only tested on p7p atm.
+3. Only tested on Pixel 7 Pro and ZFlip 3.
 
 ## 🛠️ Building app from source
 

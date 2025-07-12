@@ -185,6 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
   static const platform2 = MethodChannel('tile_channel');
 
   bool isTorchOn = false;
+  bool prefsLoaded = false;
 
   int brightnessLevel = 1; // Initial brightness level
   int maxBrightness = 45;
@@ -199,57 +200,64 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    _initializeApp();
+  }
 
-    _getPrefs();
-    _getFlash();
+  Future<void> _initializeApp() async {
+    await _getPrefs(); // récupère brightnessLevel, stepsNumber, etc.
+    await _getFlash(); // récupère maxBrightness
 
-    if (torchStatus == 0) {
-      isTorchOn = false;
-    } else {
-      isTorchOn = true;
+    setState(() {
+      isTorchOn = torchStatus != 0;
+    });
+
+    if (isTorchOn) {
+      _turnOnTorch2(brightnessLevel);
+      _toggleOn();
     }
 
-    platform2.setMethodCallHandler
-
-    (
-
-    (call) async {
-    if (call.method == "onTileClick") {
-    print("Tile Clicked!");
-    _toggleTorch();
-    } else if (call.method == "onTileAdded") {
-    print("Tile Added !");
-    Fluttertoast.showToast(
-    msg: "Tile added.",
-    toastLength: Toast.LENGTH_SHORT,
-    gravity: ToastGravity.CENTER,
-    timeInSecForIosWeb: 1,
-    backgroundColor: Colors.black,
-    textColor: Colors.white,
-    fontSize: 16.0
-    );
-    } else if (call.method == "onTileAlreadyAdded") {
-    print("Tile Already Added !");
-    Fluttertoast.showToast(
-    msg: "Tile already added.",
-    toastLength: Toast.LENGTH_SHORT,
-    gravity: ToastGravity.CENTER,
-    timeInSecForIosWeb: 1,
-    backgroundColor: Colors.black,
-    textColor: Colors.white,
-    fontSize: 16.0
-    );
-    } else if (call.method == "onToggle") {
-      print("Toggled from tile !");
-      setState(() {
-        isTorchOn = !isTorchOn;
-      });
-    }
+    platform2.setMethodCallHandler((call) async {
+      try {
+        if (call.method == "onTileClick") {
+        print("Tile Clicked!");
+        _toggleTorch();
+        } else if (call.method == "onTileAdded") {
+        print("Tile Added !");
+        Fluttertoast.showToast(
+        msg: "Tile added.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        fontSize: 16.0
+        );
+        } else if (call.method == "onTileAlreadyAdded") {
+        print("Tile Already Added !");
+        Fluttertoast.showToast(
+        msg: "Tile already added.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        fontSize: 16.0
+        );
+        } else if (call.method == "onToggle") {
+          print("Toggled from tile !");
+          setState(() {
+            isTorchOn = !isTorchOn;
+          });
+        }
+      } catch (e) {
+        print("Error in method handler: $e");
+      }
     });
   }
 
   void _toggleTorch() {
-    //HapticFeedback.selectionClick();
+    if (!prefsLoaded) return; // Ne rien faire si les prefs ne sont pas encore chargées
+
     setState(() {
       isTorchOn = !isTorchOn;
       if (isTorchOn) {
@@ -328,7 +336,7 @@ class _MyHomePageState extends State<MyHomePage> {
       brightness = 1;
     }
     try {
-      await platform.invokeMethod('turnOnTorchWithStrengthLevel2', brightness);
+      await platform.invokeMethod('turnOnTorchWithStrengthLevel2', brightness == 0 ? 1 : brightness);
     } on PlatformException catch (e) {
       print("Failed to turn on torch: ${e.message}");
     }
@@ -356,7 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
     bool? popupAutoOffLocal = prefs.getBool('popupAutoOff');
 
     setState(() {
-      brightnessLevel = brightnessLevelLocal ?? 1;
+      brightnessLevel = brightnessLevelLocal ?? 2;
       stepsNumber = stepsNumberLocal ?? 5;
       vibrationsMenu = vibrationsMenuLocal ?? true;
       vibrationsTile = vibrationsTileLocal ?? true;
@@ -364,7 +372,7 @@ class _MyHomePageState extends State<MyHomePage> {
       tileEffect = tileEffectLocal ?? true;
       popupAutoOn = popupAutoOnLocal ?? true;
       popupAutoOff = popupAutoOffLocal ?? true;
-
+      prefsLoaded = true;
     });
   }
 
@@ -682,8 +690,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 initialValue: tileEffect,
                 leading: const Icon(Icons.animation_rounded),
-                title: const Text('Tile Effect'),
-                description: const Text('Progressive switch on/off.'),
+                title: const Text('Smooth effect'),
+                description: const Text('Progressive switch on/off. (works only if brightness is set on non minimum.)'),
               ),
               SettingsTile.switchTile(
                 onToggle: (value) {
@@ -738,18 +746,53 @@ class _MyHomePageState extends State<MyHomePage> {
                           width: 300.0,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Text(
+                                'About the app',
+                                style: GoogleFonts.lato(
+                                  color: mainLight,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
                               Text(
                                 'This app creates a tile in the quick settings so you can customize the brightness and access a slider over your apps.',
                                 style: GoogleFonts.lato(
                                   color: mainLight,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.normal,
                                 ),
                               ),
                               const SizedBox(height: 20),
                               Text(
+                                'Date of creation',
+                                style: GoogleFonts.lato(
+                                  color: mainLight,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
                                 'Has been made with love in October 2023.',
+                                style: GoogleFonts.lato(
+                                  color: mainLight,
+                                  fontWeight: FontWeight.w100,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Last update',
+                                style: GoogleFonts.lato(
+                                  color: mainLight,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Updated in July 2025. (Bug fixes, dependencies update)',
                                 style: GoogleFonts.lato(
                                   color: mainLight,
                                   fontWeight: FontWeight.w100,

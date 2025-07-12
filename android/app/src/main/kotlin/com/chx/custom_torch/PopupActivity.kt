@@ -157,6 +157,13 @@ class PopupActivity : Activity() {
 
         }
     }
+    private val torchCallback: CameraManager.TorchCallback =
+        object : CameraManager.TorchCallback() {
+            override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
+                // tu peux ignorer ou implémenter cette partie si tu veux une mise à jour d’UI
+            }
+        }
+
     override fun onDestroy() {
         super.onDestroy()
         val sharedPreferences: SharedPreferences = getSharedPreferences("AndroidSharedPrefs", Context.MODE_PRIVATE)
@@ -172,6 +179,8 @@ class PopupActivity : Activity() {
             }
         }
         Log.d("popup", "popup dismiss")
+        val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        cameraManager.unregisterTorchCallback(torchCallback)
     }
 
     private fun turnOffTorch() {

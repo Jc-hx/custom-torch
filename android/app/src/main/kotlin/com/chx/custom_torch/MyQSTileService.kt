@@ -16,6 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.os.Handler
+import android.os.Looper
 
 
 class MyQSTileService : TileService() {
@@ -33,12 +35,17 @@ class MyQSTileService : TileService() {
     override fun onCreate() {
         super.onCreate()
         cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
-        registerFlashlightState(this)
+        // registerFlashlightState(this)
     }
 
 
     override fun onStartListening() {
         super.onStartListening()
+        try {
+            cameraManager.registerTorchCallback(torchCallback, Handler(Looper.getMainLooper()))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         val sharedPreferences: SharedPreferences = getSharedPreferences("AndroidSharedPrefs", Context.MODE_PRIVATE)
         brightnessLevel = sharedPreferences.getInt("brightnessLevel", 1)
         vibrationsTile = sharedPreferences.getBoolean("vibrationsTile", true)
@@ -52,6 +59,16 @@ class MyQSTileService : TileService() {
             inactiveTile()
         }
     }
+
+    override fun onStopListening() {
+        super.onStopListening()
+        try {
+            cameraManager.unregisterTorchCallback(torchCallback)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onClick() {
         super.onClick()
         TileChannelManager.isAdded = true
