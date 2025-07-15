@@ -75,6 +75,9 @@ class MyQSTileService : TileService() {
         val vibrator = getSystemService(Vibrator::class.java)
         val sharedPreferences: SharedPreferences = getSharedPreferences("AndroidSharedPrefs", Context.MODE_PRIVATE)
         val prefs = sharedPreferences.edit()
+
+        val currentBrightnessLevel = sharedPreferences.getInt("brightnessLevel", 1)
+
         if (qsTile.state == Tile.STATE_ACTIVE) {
             inactiveTile()
             job = coroutineScope.launch {
@@ -84,19 +87,19 @@ class MyQSTileService : TileService() {
         } else {
             activeTile()
             job = coroutineScope.launch {
-                turnOnTorchWithStrengthLevel(brightnessLevel)
+                turnOnTorchWithStrengthLevel(currentBrightnessLevel)
             }
-
             prefs.putInt("torchStatus", 1)
         }
-        if (vibrationsTile) {
+
+        if (sharedPreferences.getBoolean("vibrationsTile", true)) {
             vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
         }
 
         prefs.apply()
-
         TileChannelManager.invokeOnToggle()
     }
+
     override fun onTileAdded() {
         super.onTileAdded()
         TileChannelManager.isAdded = true
@@ -143,6 +146,7 @@ class MyQSTileService : TileService() {
 
     private suspend fun turnOnTorchWithStrengthLevel(torchStrength: Int) {
         try {
+            Log.i("TorchDebug", "torchStrength: $torchStrength")
             val cameraId = cameraManager.cameraIdList[0] // Use the first available camera
             var torchStrength2 = torchStrength * maxFlashlightBrightnessLevel / stepsNumber
             if (torchStrength2 == 0 || torchStrength2 <= (maxFlashlightBrightnessLevel / stepsNumber)) {
